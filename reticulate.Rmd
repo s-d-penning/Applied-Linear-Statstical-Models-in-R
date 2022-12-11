@@ -1,0 +1,30 @@
+---
+title: "Reticulate"
+author: "S.D Penning"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(reticulate)
+use_python("C:\\Python\\3_10")
+```
+
+```{python}
+import pandas as pd
+```
+
+```{python}
+x = [i for i in range(10)]
+y = [i for i in range(10)]
+
+d = {'col1': x, 'col2': y}
+df = pd.DataFrame(d)
+```
+
+```{r}
+py$df
+```
+
+

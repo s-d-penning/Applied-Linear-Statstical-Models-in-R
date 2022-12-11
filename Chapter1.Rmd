@@ -1,0 +1,430 @@
+---
+title: "Chapter 1"
+author: "S.D Penning"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(reticulate)
+library(bookdown)
+library(knitr)
+library(tidyverse)
+library(ggplot2)
+library(DiagrammeR)
+library(gapminder)
+library(skimr)
+library("ggpubr")
+use_python("C:\\Python\\3_10")
+
+set.seed(1967)
+```
+
+# 1 Linear regression with one predictor variable
+
+## 1.3 Simple linear regression model with distribution of error terms unspecified
+
+### Formal statement of the model
+
+$y_{i}=\beta_{0}+\beta_{1}x_{i}+\varepsilon_{i}$
+
+where:
+
+-   $y_{i}$ is the value of the $i^{th}$ trial of the response variable
+-   $\beta_{0}$ and $\beta_{1}$ are parameters
+-   $x_{i}$ is a known constant, namely the value of the predictor variable of the $i^{th}$ trial
+-   $\varepsilon_{i}$ is a random error term.
+    -   $E[\varepsilon_{i}]=0$
+    -   $V[\varepsilon_{i}]=\sigma^{2}$
+    -   $\varepsilon_{i}$ and $\varepsilon_{j}$ are uncorrelated so that their covariance is zero e.i $V(\varepsilon_{i},\varepsilon_{j})=0$ $\forall i,j; i\ne j, i=1,2,...,n$- SHOW
+
+#### characteristics of this model:
+
+-   Simple
+-   Linear in in the parameters
+-   linear in the predictor variable
+-   First order model
+
+### Important features of the model:
+
+1.  The response $y_{i}$ in the $i^{th}$ trial is the sum of two components, the constant term $\beta_{0} + \beta_{1}x_{i}$ and the random term $\varepsilon_{i}$
+
+2.  Therefore $y_{i}$ is a random variable.
+
+3.  $E[y_{i}]=E[\beta_{0}+\beta_{1}x_{i}+\varepsilon_{i}] = \beta_{0}+\beta_{1}x_{i}+E[\varepsilon_{i}]= \beta_{0}+\beta_{1}x_{i}$
+
+### The regression function for the model
+
+The regression function for the model relates the means of the probability distribution of Y for a given X to the level of X.
+
+4.  The response $y_{i}$ differs from the regression function by the error term $\varepsilon_{i}$
+5.  The error terms $\varepsilon_{i}$ are assumed to have constant variance $\sigma^2$
+6.  It follows that $V(y_{i})=V[\beta_{0}+\beta_{1}x_{i}+\varepsilon_{i}] = \sigma^2$
+7.  since the error terms are uncorrelated, so are the responses
+
+### Alternative form of the model
+
+$y_{i}=\beta_{0}+\beta_{1}x_{i}+\varepsilon_{i}$
+
+$=\beta_{0}+\beta_{1}(x_{i}-\bar{X})+\beta_{1}\bar{X}+\varepsilon_{i}$
+
+$=(\beta_{0}+\beta_{1}\bar{X})+\beta_{1}(x_{i}-\bar{X})+\varepsilon_{i}$
+
+$=\beta_{0}^{*}+\beta_{1}(x_{i}-\bar{X})+\varepsilon_{i}$
+
+$y_{i}=\beta_{0}^{*}+\beta_{1}(x_{i}-\bar{X})+\varepsilon_{i}$
+
+$\beta_{0}^{*}=(\beta_{0}+\beta_{1}\bar{X})$
+
+#### Example
+
+$y_{i}=9.5+2.1x_{i}+\varepsilon_{i}$ so the number of predictors = 1
+
+$\beta_{0}=9.5$
+
+$\beta_{1}=2.1$
+
+$var(\varepsilon_{i})=4$
+
+# ```{r}
+# beta_0 <- 9.5
+# beta_1 <- 2.1
+# var_e <- 4
+# ```
+
+# ```{python}
+# import pandas as pd
+# import math
+# from scipy.stats import norm
+# 
+# b0 = r.beta_0
+# b1 = r.beta_1
+# sd = math.sqrt(r.var_e)
+# 
+# replicates = 10
+# 
+# newx =[i for i in range(25,45,1)]
+# x = [i for i in range(25,45,1) for k in range(replicates)]
+# y = [b0+b1*x for x in x]
+# 
+# e = norm.rvs(size=len(y), scale=sd)
+# e_x = norm.rvs(size=len(x), scale=0.0)
+# Y = y + e
+# x = x + e_x
+# 
+# d = {'X': x, 'y': y, 'ε': e, 'Y': Y}
+# 
+# df = pd.DataFrame(d)
+#```
+
+```{r}
+replicates = 10
+
+p = 2 
+b_0 = 9.5
+b_1 = 2.1
+
+var_e = 4
+
+start_x = 0
+end_x = 50
+points_x = (end_x - start_x)
+
+X <- double(0)
+Y <- double(0)
+
+
+for (i in 0:points_x) {
+  rep <- double(length=replicates)
+  for (r in 1:replicates) {
+    rep[r] <- i + start_x
+  }
+  X <- c(X,rep)
+}
+
+e <- rnorm(sd = sqrt(var_e), n=length(X))
+
+Y <- b_0 + b_1*X + e
+
+dat <- data.frame(Y,X)
+```
+
+##### Fitting a linear model with lm
+
+```{r}
+model <- lm(data = dat, Y~X)
+summary(model)
+```
+
+```{r}
+ggplot(data = dat, aes(x=X, y=Y)) +
+  geom_point() +
+  geom_line(data=model, aes(y=model$fitted.values))
+```
+
+```{r}
+library(moderndive)
+
+
+reg_params <- get_regression_table(model)
+reg_params
+```
+
+-   The original value of $\beta_{0}$ is `r b_0` and its estimate is `r reg_params$estimate[1]` with a standard error of `r reg_params$std_error[1]`
+
+-   The original value of $\beta_{1}$ is `r b_1` and its estimate is `r reg_params$estimate[2]` with a standard error of `r reg_params$std_error[2]`
+
+### What's the variance of the residuals?
+
+The input variance in the residuals was `r var_e` whilst the model's estimate was `r var(model$residuals)`
+
+### What is the mean of the residuals?
+
+```{r}
+mean(model$residuals)
+```
+
+##### Residuals analysis
+
+```{r}
+
+par(mfrow=c(2,2))
+plot(model)
+
+```
+
+##### Linearity of the data
+
+The linearity assumption can be checked by inspecting the Residuals vs Fitted plot (1st plot):
+
+```{r}
+plot(model,1)
+```
+
+Ideally, the residual plot will show no fitted pattern. That is, the red line should be approximately horizontal at zero. The presence of a pattern may indicate a problem with some aspect of the linear model.
+
+##### Homogeneity of variance
+
+This assumption can be checked by examining the scale-location plot, also known as the spread-location plot.
+
+```{r}
+plot(model, 3)
+```
+
+This plot shows if residuals are spread equally along the ranges of predictors. It's good if you see a horizontal line with equally spread points.
+
+It can be seen that the variability (variances) of the residual points remains constant with the value of the fitted outcome variable, suggesting constant variances in the residuals errors (or homoscedasticity).
+
+##### Outliers and high leverage points
+
+High leverage points:
+
+*Definition and properties of leverages:*
+
+$Y = X\beta+\varepsilon$
+
+the predicted responses can be written as $\hat{y}=Xb$ where $b=(X^{'}X)^{-1}X^{'}y$
+
+therefore $\hat{y}=Xb=X(X^{'}X)^{-1}X^{'}y$
+
+define $H:=X(X^{'}X)^{-1}X^{'}$ which is an n x n matrix so $\hat{y}=Hy$ where $y = (y_{1}, y_{2}, ..., y_{n})$
+
+Therefore $\hat{y_{i}} = h_{i1}y_{1}+h_{i2}y_{2}+...+h_{ii}y_{i}+...+h_{in}y_{n}, \ i=1..n$
+
+so
+
+$\hat{y_{1}} = h_{11}y_{1}+h_{12}y_{2}+...+h_{1n}y_{n}$
+
+$\hat{y_{2}} = h_{21}y_{1}+h_{22}y_{2}+...+h_{2n}y_{n}$
+
+$...$
+
+$\hat{y_{n}} = h_{n1}y_{1}+h_{n2}y_{2}+...+h_{nn}y_{n}$
+
+the leverage value is $h_{ii}$ which quantifies the influence of the observed response $y_{i}$ on the predicted value $\hat{y_{i}}$
+
+* The leverage  is a measure of the distance between the x value for the  data point and the mean of the x values for all n data points.
+
+* The leverage  is a number between 0 and 1, inclusive.
+
+* The sum of the leverages equals p, the number of parameters (regression coefficients including the intercept).
+
+A data point has high leverage, if it has extreme predictor x values. This can be detected by examining the leverage statistic or the hat-value. A value of this statistic above 2(p + 1)/n indicates an observation with high leverage (P. Bruce and Bruce 2017); where, p is the number of predictors and n is the number of observations.
+
+2(p + 1)/n = `r 3*(p+1)/points_x`
+
+Outliers and high leverage points can be identified by inspecting the Residuals vs Leverage plot:
+
+```{r}
+par(mfrow=c(1,2))
+plot(model, 4)
+plot(model, 5)
+```
+
+The plot above highlights the top 3 most extreme points, with a standardized residuals below -2. However, there are few outliers that exceed 3 standard deviations.
+
+
+## 1.6 Estimation of the regression function
+
+### Method of least squares 
+
+(page 15)
+
+The method of least squares considers the deviation of $y_{i}$ from its expected value:  $y_{i}-(\beta_{0}+\beta_{1}x_{i})$
+
+let $Q=\sum_{i=1}^{n}(y_{i}-(\beta_{0}+\beta_{1}x_{i}))$
+
+The estimators of $\beta_{0}$ and $\beta_{1}$ are the values $b_{0}$ and $b_{1}$ that minimize Q for the given sample observations $S=\{(y_{1},x_{1}),(y_{2},x_{2}),...,(y_{n},x_{n})\}$
+
+therefore $\displaystyle \frac{\partial Q}{\partial \beta_{0}}=0$ and $\displaystyle \frac{\partial Q}{\partial \beta_{1}}=0$
+
+*The normal equations*
+
+$\sum y_{i}=nb_{0}+b_{1}\sum x_{i}$ and $\sum y_{i}x_{i}=b_{0}\sum x_{i}+b_{1}\sum x_{i}^{2}$
+
+solving for $b_{0}$ and $b_{1}$
+
+$b_{1}=\frac{\sum (x_{i}-\bar{X})(y_{i}-\bar{Y})}{\sum(x_{i}-\bar{X})^2}$
+
+and
+
+$b_{0}=\frac{1}{n}(\sum y_{i}-b_{1}\sum x_{i})=\bar{Y}=b_{1}\bar{X}$
+
+### Properties of the least squares estimators
+
+*Gauss-Markov theorem: Under the conditions of the regression model, the ls estimators are unbiased and have minimum variance among all unbiased linear estimators*
+
+therefore $E[b_{0}]=\beta_{0}$ and $E[b_{1}]=\beta_{1}$
+
+
+The sampling distributions of $b_{0},\ b_{1}$ are less variable than any other estimators.
+
+## Example: The Toluca Company
+
+(page 19)
+
+```{r}
+toluca<-read.csv(".\\data\\Chapter 1 data sets\\CH01TA01.txt", header = FALSE,  strip.white=TRUE, sep = "", col.names = c("x","y"))
+
+```
+
+```{r}
+toluca <- toluca %>%
+  mutate(x_dif = x - mean(x)) %>%
+  mutate(y_dif = y - mean(y)) %>%
+  mutate(x_dif_y_dif = x_dif*y_dif) %>%
+  mutate(x_dif_sq = x_dif^2) %>%
+  mutate(y_dif_sq = y_dif^2)
+```
+
+```{r}
+sum_x = sum(toluca$x)
+sum_y = sum(toluca$y)
+sum_x_dif = sum(toluca$x_dif)
+sum_y_dif = sum(toluca$y_dif)
+sum_x_dif_y_dif = sum(toluca$x_dif_y_dif)
+sum_x_dif_sq = sum(toluca$x_dif_sq)
+sum_y_dif_sq = sum(toluca$y_dif_sq)
+sum_x_dif_y = sum(toluca$x_dif_y)
+
+x_bar = mean(toluca$x)
+y_bar = mean(toluca$y)
+
+b1 = sum_x_dif_y_dif/sum_x_dif_sq
+toluca <- toluca %>%
+  mutate(k = x_dif/sum_x_dif_sq)
+
+b0 = y_bar - b1*x_bar
+```
+
+
+
+therefore $b_{1}$ = `r b1` and $b_{0}$ = `r b0`
+
+```{r}
+toluca.lm = lm(data=toluca, formula = y ~ x)
+summary(toluca.lm)
+```
+```{r}
+ggplot(data = toluca, aes(x=x, y=y)) +
+  geom_point() +
+  geom_line(data=toluca.lm, aes(y=toluca.lm$fitted.values))
+```
+
+### Point estimation of Mean Response
+
+The expected regression function is $E[Y]=\beta_{0}+\beta_{1}X$
+
+The estimated regression function is $\hat{Y}=b_{0}+b_{1}X$
+
+$E[Y]$ is the *mean response*. $\hat{Y}$ is the point estimator of the mean response when the level of the predictor variable is $X$ and it is an unbiased estimator of $E[Y]$
+
+
+$\hat{y_{i}}=b_{0}+b_{1}x_{i}$ is the fitted value for the $i^{th}$ case.
+
+## 1.7 Estimation of Error terms Variance $\sigma^{2}$
+
+
+### Point estimator of $\sigma^{2}$
+
+This is estimated by the sample variance using the mean squared deviations of the observations of $y_{i}$. The estimator is $s^{2} = \frac{\sum_{i=1}^{n}(y_{i}-\bar{y})}{n-1}$. One degree of freedom is lost in calcluating the sample variance because we had to calculate $\bar{y}$
+
+### Regression model
+
+The variance of each observation $y_{i}$ is the same as that of the error term $\varepsilon_{i}$ because $y_{i} - \hat{y_{i}}=\varepsilon_{i}$ where $\hat{y_{i}}$ is the point estimate of $y_{i}$
+
+The sum of squared errors SSE = $\sum_{i=1}^{n}(y_{i} - \hat{y_{i}})^{2}=\sum_{i=1}^{n}\varepsilon_{i}^{2}$
+
+The SSE has $n-2$ degrees of freedom, because both $\beta_{0}$ and $\beta_{1}$ had to be estimated to obtain the means $\hat{y_{i}}$
+
+
+Therefore $s^{2}=MSE=\frac{SSE}{n-2}=\frac{\sum_{i=1}^{n}(y_{i} - \hat{y_{i}})^{2}}{n-2}=\frac{\sum_{i=1}^{n}\varepsilon_{i}^{2}}{n-2}$. The expected value of $s^{2}=\sigma^{2}$
+
+```{r}
+
+toluca.sse = sum(toluca.lm[["residuals"]]^2)
+
+```
+
+SSE = `r toluca.sse`, $s^{2}$ = `r round(toluca.sse/(length(toluca$x)-2))`
+
+## 1.8 Normal Error Regression model summary
+
+$Y_{i}=\beta_{0}+\beta_{1}X_{i}+\varepsilon_{i}$
+
+where
+
+* $Y_{i}$ is the observed response in the $i^{th}$ trial
+
+* $X_{i}$ is a known constant representing the level of the predictor variable in the $i^{th}$ trial
+
+* $\beta_{0}$ and $\beta_{1}$ are parameters
+
+* $\varepsilon_{i}$ are independent, identically distributed random numbers $\sim N(0,\sigma^{2})$
+
+1. No matter the form of the distribution of the error terms $\varepsilon_{i}$ the least squares method provides unbiased point estimators of $\beta_{0}$ and $\beta_{1}$ that have the minimum variance among unbiased linear estimators
+
+2. The standard assumption is that the error terms are normally distributed $\varepsilon_{i} \sim N(0,\sigma^{2})$
+
+3. The *Normal Error Model* is the same as the regression model except that the errors are normally distributed.
+
+4. The normal distribution of the errors implies independence. The outcome of one trial does not effect the outcome of any other trial
+
+5. The normal error model implies that the $Y_{i}$ is independent normal with $E[Y_{i}]=\beta_{0}+\beta_{1}X_{i}$
+
+6. The normal error distribution implies constant variance of the error and response
+
+7. The assumption of normality is often justified cecause the sum of errors that occur from outside influences tend to follow the central limit theorem's prediction. Unless large departures from normality are present, especially in skewness, the model will work well.
+
+
+
+
+
+
+
+
+
+
+
+

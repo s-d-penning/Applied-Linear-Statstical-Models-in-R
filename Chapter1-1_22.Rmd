@@ -1,0 +1,83 @@
+---
+title: "Chapter1-1_22"
+author: "S.D Penning"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
+      theme: united
+      highlight: tango
+      code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(moderndive)
+library(skimr)
+library(gapminder)
+library(broom)
+library(moderndive)
+library(visdat)
+```
+
+```{r}
+hard.dat = read.csv(".\\data\\Chapter 1 data sets\\CH01PR22.txt", header = FALSE, sep = "", col.names = c('Hardness', 'Time'))
+```
+
+
+# Check for missing data
+
+```{r}
+vis_miss(hard.dat)
+```
+
+No missing data
+
+# Visualise the data
+
+```{r}
+ggplot(data=hard.dat, aes(x=Time, y=Hardness)) +
+  geom_point() +
+  ggtitle(label = "Scatterplot of Hardness vs. Setting time")
+```
+
+# Obtain the estimated regression function
+
+```{r}
+hard.lm = lm(data=hard.dat, formula = Hardness ~ Time, qr = TRUE)
+summary(hard.lm)
+```
+The fit appears to be quite good with high adjusted R squared and low RSE
+
+```{r}
+reg_params <- get_regression_table(hard.lm)
+reg_params  
+```
+
+$\beta_{0}=$ `r reg_params$estimate[1]`, confidence interval: (`r reg_params$lower_ci[1]`, `r reg_params$upper_ci[1]`)
+
+$\beta_{1}=$ `r reg_params$estimate[2]`, confidence interval: (`r reg_params$lower_ci[2]`, `r reg_params$upper_ci[2]`)
+
+# Obtain point estimate when T=40 hours
+
+```{r}
+Time = c(40)
+hard.new = as_tibble(Time)
+hard.pred = predict(object = hard.lm, newdata = hard.new)
+hard.pred
+```
+
+# Obtain point estimate of change in mean hardness in 1 hour
+
+```{r}
+delta_hard = reg_params$estimate[2]
+se_delta_hard = reg_params$std_error[2]
+```
+
+The mean hardness change is `r delta_hard`, se = `r se_delta_hard`
+

@@ -1,0 +1,77 @@
+---
+title: "Chapter1-1_20"
+author: "S.D Penning"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(broom)
+```
+
+# 1.20 Copier Mainternance
+
+```{r}
+maint.dat = read.csv(".\\data\\Chapter 1 data sets\\CH01PR20.txt", header = FALSE,  strip.white=TRUE, sep = "", col.names = c("Minutes","Services"))
+```
+
+```{r}
+ggplot(data=maint.dat, aes(x=Services,y=Minutes)) +
+  geom_point() +
+  ggtitle("Maintenance time vs. Number of Services")
+```
+
+```{r}
+maint.lm = lm(data = maint.dat, formula = Minutes ~ -1 + Services)
+summary(maint.lm)
+
+```
+```{r}
+library(moderndive)
+
+reg_params <- get_regression_table(maint.lm)
+reg_params
+```
+
+# a) Estimated regression function
+
+
+$\beta_{0}=0$
+
+$\beta_{1}=$ `r reg_params$estimate[1]`, confidence interval: (`r reg_params$lower_ci[1]`, `r reg_params$upper_ci[1]`)
+
+```{r}
+maint.aug = augment(maint.lm, data = maint.dat, se_fit = TRUE, interval = c("prediction"))
+
+```
+
+# b) Plot estimated regression function
+
+```{r}
+ggplot(data=maint.aug, aes(x=Services,y=Minutes)) +
+  geom_point() +
+  ggtitle("Maintenance time vs. Number of Services") +
+  geom_line(aes(y=.fitted))+
+  geom_line(aes(y=.fitted+2*.se.fit)) +
+  geom_line(aes(y=.fitted-2*.se.fit))
+
+```
+
+# c) Interpret $\beta_{0}$
+
+$\beta_{0}$ must be zero in this case. Negative values for zero services do not make sense.
+
+```{r}
+Services = c(5)
+maint.new = as_tibble(Services)
+maint.new.pred = predict.lm(object = maint.lm, newdata = maint.new, se.fit = TRUE)
+```
+
+# d) Point estimate when X=5 copiers
+
+`r maint.new.pred$fit` , s.e = `r maint.new.pred$se.fit`

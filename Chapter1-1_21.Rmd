@@ -1,0 +1,111 @@
+---
+title: "Chapter1-1_21"
+author: "S.D Penning"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(moderndive)
+library(skimr)
+library(gapminder)
+library(broom)
+library(moderndive)
+```
+
+# 1.21 Airfreight breakage
+
+```{r}
+break.dat = read.csv(".\\data\\Chapter 1 data sets\\CH01PR21.txt", header = FALSE,  strip.white=TRUE, sep = "", col.names = c("Breakages","Transfers"))
+```
+
+## Inspect the data
+
+### Check the types and range
+
+```{r}
+glimpse(break.dat)
+```
+
+## Check for missing values
+
+```{r}
+skim(break.dat)
+```
+
+## Compute correlation values
+```{r}
+
+break.dat %>% 
+  get_correlation(formula = Breakages ~ Transfers)
+
+break.dat %>%
+  summarise(correlation = cor(Breakages, Transfers))
+```
+
+## Plot the raw data
+
+```{r}
+ggplot(data = break.dat, aes(x=Transfers, y=Breakages))+
+  geom_point() +
+  geom_jitter(width = 0.05) +
+  geom_smooth(method = "lm", se = FALSE)
+```
+
+# a) Obtain the estimated regression function
+
+```{r}
+break.lm = lm(data = break.dat, formula = Breakages ~ Transfers)
+summary(break.lm)
+```
+```{r}
+library(moderndive)
+
+reg_params <- get_regression_table(break.lm)
+reg_params
+```
+$\beta_{0}=$ `r reg_params$estimate[1]`, confidence interval: (`r reg_params$lower_ci[1]`, `r reg_params$upper_ci[1]`)
+
+$\beta_{1}=$ `r reg_params$estimate[2]`, confidence interval: (`r reg_params$lower_ci[2]`, `r reg_params$upper_ci[2]`)
+
+```{r}
+Transfers = c(1)
+break.new = as_tibble(Transfers)
+break.new.pred = predict.lm(object = break.lm, newdata = break.new, se.fit = TRUE)
+b_1 = break.new.pred$fit
+```
+
+# b) Point estimate when X=1 transfers
+
+`r break.new.pred$fit` , s.e = `r break.new.pred$se.fit`
+
+# c) Estimated increase from 1 to 2 transfers
+
+```{r}
+Transfers = c(1,2)
+break.new = as_tibble(Transfers)
+break.new.pred = predict.lm(object = break.lm, newdata = break.new, se.fit = TRUE)
+delta = break.new.pred$fit[2] - break.new.pred$fit[1]
+se = sqrt(break.new.pred$se.fit[1]^2+break.new.pred$se.fit[2]^2)
+```
+
+Increase = `r delta` , s.e = `r se`
+
+# d) Verify that the regression line goes through $(\bar{X},\bar{Y})$
+
+```{r}
+B_Bar = mean(break.dat$Breakages)
+T_Bar = mean(break.dat$Transfers)
+```
+
+```{r}
+Transfers = c(T_Bar)
+break.new = as_tibble(Transfers)
+break.new.pred = predict.lm(object = break.lm, newdata = break.new, se.fit = TRUE)
+equality = (b_1 == break.new.pred$fit[1])
+```
+
+The regression line goes through $(\bar{X},\bar{Y})$ is `r equality`

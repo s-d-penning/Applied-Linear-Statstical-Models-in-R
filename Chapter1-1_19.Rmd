@@ -1,0 +1,130 @@
+---
+title: "Chapter 1 Excercises"
+author: "S.D Penning"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(broom)
+library(jtools)
+
+theme_set(theme_classic())
+```
+
+# 1.19 GPA
+
+## Observations:
+
+1. n = 120
+2. no replication
+3. selection at random
+4. all from the same college (random effect) if we want to know about all colleges but fixed effect if we want to know about this college
+
+```{r}
+gpa.df = read.csv(".\\data\\Chapter 1 data sets\\CH01PR19.txt", header = FALSE,  strip.white=TRUE, sep = "", col.names = c("GPA","ACT"))
+```
+
+```{r}
+ggplot(data=gpa.df, aes(x=ACT, y=GPA,colour=GPA)) +
+  geom_point() +
+  ggtitle("GPA vs. ACT scores")
+  
+```
+
+## a) Least squares estimates of $\beta_{0}$ and $\beta_{1}$
+```{r}
+library(moderndive)
+gpa.lm = lm(data=gpa.df, formula = GPA ~ ACT)
+
+reg_params <- get_regression_table(gpa.lm)
+reg_params
+```
+
+$\beta_{0}=$ `r reg_params$estimate[1]`, confidence interval: (`r reg_params$lower_ci[1]`, `r reg_params$upper_ci[1]`)
+
+$\beta_{1}=$ `r reg_params$estimate[2]`, confidence interval: (`r reg_params$lower_ci[2]`, `r reg_params$upper_ci[2]`)
+
+
+```{r}
+gpa.lm.diag.metrics <- augment(gpa.lm)
+
+gpa.lm.summary = summary(gpa.lm)
+```
+
+
+## b) Plot the estimated regression function and the data
+
+```{r}
+ggplot(data=gpa.lm.diag.metrics, aes(x=ACT, y=GPA)) +
+  geom_point() +
+  geom_line(aes(y=.fitted))
+```
+
+```{r}
+ggplot(gpa.lm.diag.metrics, aes(ACT, GPA)) +
+  geom_point() +
+  stat_smooth(method = lm, se = TRUE) +
+  geom_segment(aes(xend = ACT, yend = .fitted), color = "red", size = 0.3)
+```
+
+The model does not wit the data particularity well. The model only explains `r round(gpa.lm.summary$adj.r.squared*100,1)` % of the variation in the data
+
+## c) Obtain a point estimate for ACT = 30
+
+```{r}
+new_data = data.frame(ACT=30)
+gpa.pred = predict(gpa.lm, newdata = new_data, interval = "prediction")
+
+```
+
+GPA(30) = `r gpa.pred[1]`. Prediction interval = (`r gpa.pred[2]`, `r gpa.pred[3]`)
+
+## d) What is the point estimate of the change in mean reposnse when the test score increases by 1 point
+
+$\beta_{1}=$ `r reg_params$estimate[2]`, confidence interval: (`r reg_params$lower_ci[2]`, `r reg_params$upper_ci[2]`)
+
+
+```{r}
+library(ggfortify)
+autoplot(gpa.lm)
+```
+```{r}
+# Cook's distance
+plot(gpa.lm, 4)
+# Residuals vs Leverage
+plot(gpa.lm, 5)
+```
+### Remove the outliers
+
+```{r}
+library(dplyr)
+library(lmtest)
+
+gpa.df2 <- gpa.df %>%
+  slice(-c(2,9,115))
+
+gpa.lm2 = lm(data=gpa.df2, formula = GPA ~ ACT)
+
+bptest(gpa.lm2)
+```
+
+```{r}
+
+reg_params2 <- get_regression_table(gpa.lm2)
+reg_params2
+
+autoplot(gpa.lm2)
+summary(gpa.lm2)
+summary(gpa.lm)
+
+gpa.lm.diag.metrics2 <- augment(gpa.lm2)
+ggplot(gpa.lm.diag.metrics2, aes(ACT, GPA)) +
+  geom_point() +
+  stat_smooth(method = lm, se = TRUE) +
+  geom_segment(aes(xend = ACT, yend = .fitted), color = "red", size = 0.3)
+
+```
+
