@@ -1,0 +1,67 @@
+---
+title: "Chapter2"
+output: html_document
+date: "`r Sys.Date()`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Inferences in regression and Correlation Analysis
+
+The model for this section is
+
+$Y_{i}=\beta_{0}+\beta_{1}X_{i}+\varepsilon_{i}$
+
+where: 
+
+
+* $Y_{i}=\beta_{0}+\beta_{1}$ are parameters
+
+* $X_{i}$ are known constants
+
+* $\varepsilon_{i}$ are independent $\sim N(0,\sigma^{2})$
+
+
+## 2.1 Inferences concerning $\beta_{1}$
+
+$H_{0}: \beta_{1}=0$
+
+$H_{a}: \beta_{1}\ne0$
+
+When $\beta_{1}=0$ then there is no relationship between Y and X because the distributions of Y are identical for all levels of X, and  $E[Y]=\beta_{0}+(0)X=\beta_{0}$
+
+### The sampling distribution of $b_{1}$
+
+#### **Linear combination**
+
+The point estimator of $b_{1}=\frac{\sum(X_{i}-\bar{X})(Y_{i}-\bar{Y})}{\sum(X_{i}-\bar{X})^{2}}$
+
+The sampling distribution of $b_{1}$ describes the different values of $b_{1}$ that would occur with repeated sampling when the levels of X are held constant from sample to sample.
+
+$\sum(X_{i}-\bar{X})(Y_{i}-\bar{Y}) = \sum(X_{i}-\bar{X})(Y_{i})-\sum(X_{i}-\bar{X})(\bar{Y})$
+
+$\sum(X_{i}-\bar{X})(\bar{Y})=(\bar{Y})\sum(X_{i}-\bar{X})=0$ because $\sum(X_{i}-\bar{X})=0$
+
+therefore $b_{1}=\frac{\sum(X_{i}-\bar{X})(Y_{i}-\bar{Y})}{\sum(X_{i}-\bar{X})^{2}}=\frac{\sum(X_{i}-\bar{X})(Y_{i})}{\sum(X_{i}-\bar{X})^{2}}=\sum k_{i}Y_{i}$
+
+therefore $b_{1}$ is a linear combination of $Y{i}$
+
+$\sum k_{i}=\frac{\sum(X_{i}-\bar{X})}{\sum(X_{i}-\bar{X})^{2}}=0$
+
+$\sum k_{i}^{2}=\sum [\frac{(X_{i}-\bar{X})}{\sum(X_{i}-\bar{X})^{2}}]^{2}=\frac{1}{\sum(X_{i}-\bar{X})^{2}}$
+
+#### **Distribution**
+
+$b_{1}$ is a linear combination of $Y_{i}$ which are iid Normally distributed and therefore is normally distributed itself.
+
+#### **Mean**
+
+
+
+
+
+
+
